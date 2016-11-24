@@ -1,0 +1,107 @@
+<gui>: #é um boxlayout
+    orientation: 'vertical'
+
+    #barra de ferramentas
+    ActionBar:
+        pos_hint: {'top':1}
+        
+        ActionView:
+            use_separator: False
+            
+            ActionPrevious:
+                #para esconder o app_icon do kivy e alinhar os menus a esquerda
+                app_icon_width: 0.1
+                width: 0
+                size_hint_x: None
+                
+                with_previous: False
+                
+            ActionGroup:
+                size_hint_x: None
+                mode:'spinner'
+                text: 'Arquivo'
+                    
+                ActionButton:
+                    text: 'Sair'
+                    on_release: app.stop()
+                    
+            ActionGroup:
+                id: ag
+                mode:'spinner'
+                text: 'Ajuda'
+                    
+                ActionButton:
+                    text: 'Sobre'
+                    on_release: root.popup.open()
+                        
+                            
+                    
+            ActionGroup:
+                
+                ActionButton:           
+                    text: 'Exportar Imagem'
+                    on_press: area.export_to_png('circuito.png')
+                    
+                ActionToggleButton:               
+                    text: 'Liga/Desliga'
+                    #on_press: area.simulando = not area.simulando
+                    on_press:root.toogle()
+
+                            
+    #fundo
+    BoxLayout:
+        id: fundo
+        size_hint: (1,0.8)
+        
+        #pinta o fundo de branco
+        canvas.before:
+            Color:
+                rgb: (0.95,0.95,0.95)
+            Rectangle:
+                size: fundo.size
+                pos: fundo.pos
+        
+        #painel dos componentes
+        ScrollView:
+            #id: painel
+            size_hint: (0.1,0.95)
+            
+            Painel:
+                area: area
+                size_hint: 1, None
+                height: self.minimum_height
+
+                
+        #área de desenho
+        area: 
+            id: area
+            #pinta o fundo de branco
+            #necessario para exportar imagens com o fundo branco
+            canvas.before:
+                Color:
+                    rgb: 1,1,1
+                Rectangle:
+                    size: area.size
+                    pos: area.pos
+                Color:
+                    rgb: 0,0,0
+                #desenha a linha divisoria
+                Line:
+                    width: 1
+                    points: self.width*0.1, self.height, self.width*0.1, 0
+
+                    
+
+
+<area@Widget>:
+    simulando: False
+    
+<Painel>:
+    id: painel
+    cols: 1
+    spacing: 5 
+
+
+
+    
+
