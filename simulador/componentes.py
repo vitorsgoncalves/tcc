@@ -9,7 +9,6 @@ from kivy.graphics import Line
 from kivy.core.window import Window
 from kivy.uix.image import Image
 from kivy.properties import BooleanProperty
-#from kivy.properties import ObjectProperty
 from kivy.clock import Clock
 from kivy.uix.bubble import Bubble
 from kivy.uix.textinput import TextInput
@@ -342,9 +341,8 @@ class Componente(Image):
     def __init__(self, **kwargs):
         super(Componente, self).__init__(**kwargs)
 
-        # define tamanho e posição iniciais
+        # define posição inicial
         self.size = self.texture_size
-        self.center = (Window.mouse_pos[0], Window.mouse_pos[1])
 
         # adiciona os conectores
         for conector in self.conectores:
@@ -398,8 +396,10 @@ class Cilindro(Componente):
     source = 'images/g178.png'
 
     posicao = 0
-    equacao = None
+    #equacao = None
     direcao = None
+
+    def equacao(self, p1, p2): pass
 
     def ciclo(self, dt):
         """lê as entradas de pressão e atualiza a posição do pistaoão. Em seguida
@@ -468,8 +468,8 @@ class Cilindro(Componente):
         self.bind(pos=update_rect, size=update_rect)
 
 
-        # para verificar se o pistaoao bateu em um rolete
-        # suspeito que está usando calculos desnecessarios
+    # para verificar se o pistaoao bateu em um rolete
+    # suspeito que está usando calculos desnecessarios
     def verifica_colisao(self):
         """verifica se a ponta do pistao colidiu com um objeto do tipo rolete"""
         if simulando:
@@ -549,18 +549,16 @@ class SimplesAcaoInvertida(Cilindro):
 
         self.bind(pos=update_rect, size=update_rect)
 
-        def expresao(pressao, vazao):
-            """equação característica do cilindro"""
-            variacao = 0
-            if len(pressao) > 0:
-                if pressao[0] > 0:
-                    variacao = -pressao[0] * vazao[0]
-                else:
-                    variacao = 10  # forca da mola
-            self.atualiza_mola()
-            return variacao
-
-        self.equacao = expresao
+    def equacao(self, pressao, vazao):
+        """equação característica do cilindro"""
+        variacao = 0
+        if len(pressao) > 0:
+            if pressao[0] > 0:
+                variacao = -pressao[0] * vazao[0]
+            else:
+                variacao = 10  # forca da mola
+        self.atualiza_mola()
+        return variacao
 
 
 class SimplesAcao(Cilindro):
@@ -617,19 +615,17 @@ class SimplesAcao(Cilindro):
 
         self.bind(pos=update_rect, size=update_rect)
 
-        def expresao(pressao, vazao):
-            """equação característica do cilindro"""
+    def equacao(self, pressao, vazao):
+        """equação característica do cilindro"""
 
-            variacao = 0
-            if len(pressao) > 0:
-                if pressao[0] > 0:
-                    variacao = pressao[0] * vazao[0]
-                else:
-                    variacao = -10  # forca da mola
-            self.atualiza_mola()
-            return variacao
-
-        self.equacao = expresao
+        variacao = 0
+        if len(pressao) > 0:
+            if pressao[0] > 0:
+                variacao = pressao[0] * vazao[0]
+            else:
+                variacao = -10  # forca da mola
+        self.atualiza_mola()
+        return variacao
 
 
 class DuplaAcao(Cilindro):
@@ -642,14 +638,12 @@ class DuplaAcao(Cilindro):
 
         super(DuplaAcao, self).__init__(**kwargs)
 
-        def expresao(pressao, vazao):
-            """equação característica do cilindro"""
-            variacao = 0
-            if len(pressao) > 0:
-                variacao = (self.conectores[0].linha.pressao * self.conectores[0].linha.vazao) - (self.conectores[1].linha.pressao * self.conectores[1].linha.vazao)
-            return variacao
-
-        self.equacao = expresao
+    def equacao(self, pressao, vazao):
+        """equação característica do cilindro"""
+        variacao = 0
+        if len(pressao) > 0:
+            variacao = (self.conectores[0].linha.pressao * self.conectores[0].linha.vazao) - (self.conectores[1].linha.pressao * self.conectores[1].linha.vazao)
+        return variacao
 
 
 class Acionador(Image):
@@ -1107,9 +1101,6 @@ class Valvula(ButtonBehavior, Componente):
         super(Valvula, self).__init__(**kwargs)
         self.size = 40 * self.posicoes, 40
 
-        # necessario pois nao aparecia na posicao correta
-        # provavelmente porque classe do componente trata em funcao da textura
-        self.center = (Window.mouse_pos[0], Window.mouse_pos[1])
 
         # adicionando botao esquerdo
         self.acionador_esquerda = Acionador('esq')
@@ -1845,7 +1836,7 @@ class Escape(Componente):
         super(Escape, self).__init__(**kwargs)
 
         
-class UnidadeDeCondicionamento(Componente):
+class UnidadeCondicionadora(Componente):
     """unidade condicionadora de ar comprimido
     sua função no software é apenas de ajustar a saída de pressão
     """
@@ -1875,7 +1866,7 @@ class UnidadeDeCondicionamento(Componente):
             Conector('saida', (83, 20), 'horizontal', center=self.pos)
         ]
 
-        super(UnidadeDeCondicionamento, self).__init__(**kwargs)
+        super(UnidadeCondicionadora, self).__init__(**kwargs)
 
         # cria o menu de vias flutuante
         self.menu = Bubble(
@@ -1976,7 +1967,6 @@ class RedutorVazao(Componente):
             arrow_pos='bottom_mid'
         )
         # adiciona um slider para ajustar a pressão de saída
-        # ,value_track_color=[1, 0, 0, 1])
         self.slider = Slider(min=0, max=100, value=100)
         self.button = Button(text='inverter', on_press=self.inverter)
         self.menu.add_widget(self.slider)
