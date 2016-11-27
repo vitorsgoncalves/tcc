@@ -8,65 +8,88 @@ from kivy.core.window import Window
 from kivy.uix.image import Image
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.label import Label
+from kivy.utils import platform
 
 from kivy.config import Config
 Config.set('input', 'mouse', 'mouse,disable_multitouch')
 
 
-from componentes import *
-
+from componentes import SimplesAcao
+from componentes import DuplaAcao
+from componentes import SimplesAcaoInvertida
+from componentes import RedutorVazao
+from componentes import Valvula
+from componentes import Fonte
+from componentes import Escape
+from componentes import ValvulaOu
+from componentes import ValvulaE
+from componentes import UnidadeCondicionadora
+from componentes import Manometro
+from componentes import muda_estado
 
 class Painel(GridLayout):
 
     componentes = [
-        {'imagem': 'images/cilindro_simples.png', 'comando': 'SimplesAcao()'},
+        {'imagem': 'images/cilindro_simples.png', 'comando': SimplesAcao, 'args':None},
         {'imagem': 'images/cilindro_simples_inv.png',
-            'comando': 'SimplesAcaoInvertida()'},
-        {'imagem': 'images/cilindro_dupla.png', 'comando': 'DuplaAcao()'},
-        {'imagem': 'images/x10640.png', 'comando': 'RedutorVazao()'},
-        {'imagem': 'images/val.png', 'comando': 'Valvula(2)'},
-        {'imagem': 'images/val3.png', 'comando': 'Valvula(3)'},
-        {'imagem': 'images/val4.png', 'comando': 'Valvula(4)'},
-        {'imagem': 'images/val5.png', 'comando': 'Valvula(5)'},
-        {'imagem': 'images/tri.png', 'comando': 'Fonte()'},
-        {'imagem': 'images/tri2.png', 'comando': 'Escape()'},
-        {'imagem': 'images/valOUpeq.png', 'comando': 'ValvulaOu()'},
-        {'imagem': 'images/valEcomp.png', 'comando': 'ValvulaE()'},
-        {'imagem': 'images/flr.png', 'comando': 'UnidadeDeCondicionamento()'},
-        {'imagem': 'images/manometro.png', 'comando': 'Manometro()'}
+            'comando': SimplesAcaoInvertida, 'args':None},
+        {'imagem': 'images/cilindro_dupla.png', 'comando': DuplaAcao, 'args':None},
+        {'imagem': 'images/x10640.png', 'comando': RedutorVazao, 'args':None},
+        {'imagem': 'images/val.png', 'comando': Valvula, 'args':2},
+        {'imagem': 'images/val3.png', 'comando': Valvula, 'args':3},
+        {'imagem': 'images/val4.png', 'comando': Valvula, 'args':4},
+        {'imagem': 'images/val5.png', 'comando': Valvula, 'args':5},
+        {'imagem': 'images/tri.png', 'comando': Fonte, 'args':None},
+        {'imagem': 'images/tri2.png', 'comando': Escape, 'args':None},
+        {'imagem': 'images/valOUpeq.png', 'comando': ValvulaOu, 'args':None},
+        {'imagem': 'images/valEcomp.png', 'comando': ValvulaE, 'args':None},
+        {'imagem': 'images/flr.png', 'comando': UnidadeCondicionadora, 'args':None},
+        {'imagem': 'images/manometro.png', 'comando': Manometro, 'args':None}
     ]
 
     def __init__(self, **kwargs):
         super(Painel, self).__init__(**kwargs)
 
-        def func(instance):
+        def adiciona_componente(instance):
+
             if not instance.parent.area.simulando:
-                exec('instance.parent.area.add_widget(' + instance.comando + ')')
+                if instance.args is not None:
+                    novo_componente = instance.comando(instance.args)
+                else:
+                    novo_componente = instance.comando()
+
+                if platform is 'android':
+                    novo_componente.center = instance.last_touch.pos
+                else:
+                    novo_componente.center = Window.mouse_pos
+                instance.parent.area.add_widget(novo_componente)
+                
 
         for componente in self.componentes:
             self.add_widget(
                 Botao(
                     comando=componente['comando'],
+                    args=componente['args'],
                     source=componente['imagem'],
-                    on_press=func))
+                    on_press=adiciona_componente))
 
 
 class Botao(ButtonBehavior, Image):
 
-    def __init__(self, comando, **kwargs):
+    click = None
+
+    def __init__(self, comando, args, **kwargs):
         super(Botao, self).__init__(**kwargs)
         self.size_hint = (1, None)
         self.size = self.texture_size
         self.comando = comando
+        self.args = args
 
 
 class Gui(BoxLayout):
 
     def toogle(self):
         muda_estado()
-        #global simulando
-        #simulando = not simulando
-        #componentes.simulando = not componentes.simulando
 
     texto = "Este simulador foi desenvolvido para o meu trabalho de conclusão de curso "\
             "e está disponível sob licença GPL 3 em: \n"
