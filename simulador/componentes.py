@@ -617,7 +617,6 @@ class SimplesAcao(Cilindro):
 
     def equacao(self, pressao, vazao):
         """equação característica do cilindro"""
-
         variacao = 0
         if len(pressao) > 0:
             if pressao[0] > 0:
@@ -837,16 +836,16 @@ class Acionador(Image):
         else:
             if not self.menu.collide_point(*touch.pos):
                 self.remove_bubble()
-            else:
-                if self.collide_point(*touch.pos):
-                    if self.tipo == 'botao':
-                        #self.parent.acionado = 1
-                        self.intensidade = 2
-                    elif self.tipo == 'botao_retentivo':
-                        if self.intensidade > 0:
-                            self.intensidade = 0
-                        else:
-                            self.intensidade = 2                
+
+            if self.collide_point(*touch.pos):
+                if self.tipo == 'botao':
+                    #self.parent.acionado = 1
+                    self.intensidade = 2
+                elif self.tipo == 'botao_retentivo':
+                    if self.intensidade > 0:
+                        self.intensidade = 0
+                    else:
+                        self.intensidade = 2                
 
         super(Image, self).on_touch_down(touch)
 
