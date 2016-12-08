@@ -620,7 +620,7 @@ class SimplesAcao(Cilindro):
         variacao = 0
         if len(pressao) > 0:
             if pressao[0] > 0:
-                variacao = pressao[0] * vazao[0]
+				variacao = pressao[0] * vazao[0]
             else:
                 variacao = -10  # forca da mola
         self.atualiza_mola()
@@ -1756,7 +1756,7 @@ class Fonte(Componente):
         if simulando:
             if self.conectores[0].linha is not None:
                 self.conectores[0].linha.pressao = self.pressao
-                self.conectores[0].linha.vazao = self.vazao
+                self.conectores[0].linha.vazao =1# self.vazao
                 self.conectores[0].linha.propaga = True
 
     def on_enter(instance, value):
