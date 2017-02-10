@@ -5,7 +5,8 @@ Simulador de circuitos pneumáticos escrito em python utilizando a biblioteca ki
 
 Permite a montagem e simulação interativa em tempo real de circuitos compostos por válvulas e cilindros.
 
-![](screenshots/01.png) ![](screenshots/02.png) ![](screenshots/03.png)
+<img src="/screenshots/01?raw=true" width="49%" height="40%" />
+<img src="/screenshots/02?raw=true" width="49%" height="40%" />
 ___
 
 ### Utilização
