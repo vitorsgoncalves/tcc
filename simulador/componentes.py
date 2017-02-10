@@ -620,7 +620,7 @@ class SimplesAcao(Cilindro):
         variacao = 0
         if len(pressao) > 0:
             if pressao[0] > 0:
-				variacao = pressao[0] * vazao[0]
+                variacao = pressao[0] * vazao[0]
             else:
                 variacao = -10  # forca da mola
         self.atualiza_mola()

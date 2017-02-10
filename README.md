@@ -4,6 +4,8 @@
 Simulador de circuitos pneumáticos escrito em python utilizando a biblioteca kivy.
 
 Permite a montagem e simulação interativa em tempo real de circuitos compostos por válvulas e cilindros.
+
+![](screenshots/01.png) ![](screenshots/02.png) ![](screenshots/03.png)
 ___
 
 ### Utilização
