@@ -1,5 +1,14 @@
 # -*- coding: UTF-8 -*-
 
+from kivy.config import Config
+
+#para funcionar em computadores com placas de video integradas
+Config.set('graphics', 'multisamples', '0')
+
+#para desabilitar a simulaçãop de multitouch ao clicar com o botão direito
+Config.set('input', 'mouse', 'mouse,disable_multitouch')
+
+#importações dos componentes do kivy
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
@@ -10,10 +19,7 @@ from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.label import Label
 from kivy.utils import platform
 
-from kivy.config import Config
-Config.set('input', 'mouse', 'mouse,disable_multitouch')
-
-
+#importações dos componentes pneumáticos
 from componentes import SimplesAcao
 from componentes import DuplaAcao
 from componentes import SimplesAcaoInvertida
@@ -41,7 +47,7 @@ class Painel(GridLayout):
         {'imagem': 'images/val5.png', 'comando': Valvula, 'args':5},
         {'imagem': 'images/tri.png', 'comando': Fonte, 'args':None},
         {'imagem': 'images/tri2.png', 'comando': Escape, 'args':None},
-        {'imagem': 'images/valOUpeq.png', 'comando': ValvulaOu, 'args':None},
+        {'imagem': 'images/valOU.png', 'comando': ValvulaOu, 'args':None},
         {'imagem': 'images/valEcomp.png', 'comando': ValvulaE, 'args':None},
         {'imagem': 'images/flr.png', 'comando': UnidadeCondicionadora, 'args':None},
         {'imagem': 'images/manometro.png', 'comando': Manometro, 'args':None}

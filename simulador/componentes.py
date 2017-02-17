@@ -983,21 +983,24 @@ class ValvulaOu(ValvulaLogica):
     def equacao(self, p1, p2):
         """define o comportamento lógico da válvula"""
 
-        if p1 >= p2 > 0:
+        if p1 >= p2 and p1 > 0:
+            # quando as 2 entradas forem iguais, pode conectar em qualquer
+            # linha
             self.pos_obturador = 1
             self.conectores[1].linha.disconnect(self.conectores[2].linha)
             self.conectores[2].linha.disconnect(self.conectores[1].linha)
             self.conectores[0].linha.connect_to(self.conectores[2].linha)
             self.conectores[2].linha.connect_to(self.conectores[0].linha)
-        elif p2 > p1:
+        elif p2 > p1 and p2> 0:
             self.pos_obturador = -1
             self.conectores[0].linha.disconnect(self.conectores[2].linha)
             self.conectores[2].linha.disconnect(self.conectores[0].linha)
             self.conectores[1].linha.connect_to(self.conectores[2].linha)
             self.conectores[2].linha.connect_to(self.conectores[1].linha)
         else:
-            # quando as 2 entradas forem iguais, pode conectar em qualquer
-            # linha
+            self.pos_obturador = 0
+            self.conectores[2].linha.pressao = 0
+            self.conectores[2].linha.vazao = 0
             self.conectores[0].linha.disconnect(self.conectores[2].linha)
             self.conectores[2].linha.disconnect(self.conectores[0].linha)
             self.conectores[1].linha.disconnect(self.conectores[2].linha)
@@ -1024,6 +1027,10 @@ class Valvula(ButtonBehavior, Componente):
             nova_via = DuasVias(0)
         elif self.qt_vias == 3:
             nova_via = TresVias(0)
+        elif self.qt_vias == 4:
+            nova_via = QuatroVias(0)
+        elif self.qt_vias == 5:
+            nova_via = CincoVias(0)
 
         nova_via.pos = (self.pos[0] +
                         nova_via.texture_size[1] *
@@ -1036,21 +1043,20 @@ class Valvula(ButtonBehavior, Componente):
 
     def remove_via(self):
 
-        self.posicoes -= 1
-        self.size = 40 * self.posicoes, 40
+        if self.posicoes >= 3:
+            self.posicoes -= 1
+            self.size = 40 * self.posicoes, 40
 
-        self.remove_widget(self.vias[self.posicoes])  # obs - ja subtraiu 1
-        self.vias.remove(self.vias[self.posicoes])
+            self.remove_widget(self.vias[self.posicoes])  # obs - ja subtraiu 1
+            self.vias.remove(self.vias[self.posicoes])
 
-        self.acionador_direita.pos = (self.pos[0] + self.size[0], self.pos[1])
+            self.acionador_direita.pos = (self.pos[0] + self.size[0], self.pos[1])
 
     def ciclo(self, dt):
         if simulando:
             if self.conectores[1].linha is not None:
                 self.vias[
-                    self.pos_val].vias[
-                    self.vias[
-                        self.pos_val].tipo]['logica']()
+                    self.pos_val].vias[self.vias[self.pos_val].tipo]['logica']()
 
             direita = self.acionador_esquerda.intensidade
             esquerda = self.acionador_direita.intensidade
@@ -1168,8 +1174,8 @@ class Vias(Image):
                 self.remove_widget(self.menu)
 
     def press_via(self, instance):
-        self.tipo = instance.via
-        self.source = self.vias[self.tipo]['imagem']
+        #self.tipo = instance.via
+        self.source = self.vias[instance.via]['imagem']
         self.remove_bubble()
 
     def press_add(self, instance):
@@ -1188,7 +1194,7 @@ class Vias(Image):
         for conector in self.parent.conectores:
             for conector2 in self.parent.conectores:
                 conector.linha.disconnect(conector2.linha)
-                conector2.linha.vazao = 0
+                #conector2.linha.vazao = 0
 
     def __init__(self, tipo, vias, **kwargs):
         super(Vias, self).__init__(**kwargs)
@@ -1259,9 +1265,12 @@ class DuasVias(Vias):
                 self.parent.conectores[0].linha)
             self.parent.conectores[0].linha.connect_to(
                 self.parent.conectores[1].linha)
+                
+            print('passa')
 
         def bloqueia():
             self.desconecta_tudo()
+            print('bloqueia')
 
         self.tipo = tipo
         self.vias = [
@@ -1344,7 +1353,7 @@ class TresVias(Vias):
             {'imagem': 'images/3vias_b.png', 'logica': b},
             {'imagem': 'images/3vias_c.png', 'logica': c},
             {'imagem': 'images/3vias_d.png', 'logica': d},
-            {'imagem': 'images/3vias_e.png', 'logica': e},
+            {'imagem': 'images/3vias_e.png', 'logica': e}
         ]
 
         super(TresVias, self).__init__(self.tipo, self.vias, **kwargs)
@@ -1354,7 +1363,7 @@ class QuatroVias(Vias):
 
     def __init__(self, tipo, **kwargs):
 
-        def a():
+        def e():
             """
              |   |
             ‾‾‾ ‾‾‾
@@ -1363,7 +1372,7 @@ class QuatroVias(Vias):
             """
             self.desconecta_tudo()
 
-        def b():
+        def f():
             """
              |  |
             ‾‾‾ |
@@ -1379,7 +1388,7 @@ class QuatroVias(Vias):
                             1].linha:
                         conector.linha.connect_to(conector2.linha)
 
-        def c():
+        def g():
             """
              |   |
              |  ‾‾‾
@@ -1395,7 +1404,7 @@ class QuatroVias(Vias):
                             3].linha:
                         conector.linha.connect_to(conector2.linha)
 
-        def d():
+        def h():
             """
              |   |
              ‾‾‾‾|
@@ -1411,7 +1420,7 @@ class QuatroVias(Vias):
                             0].linha:
                         conector.linha.connect_to(conector2.linha)
 
-        def e():
+        def c():
             """
              |   |
              |‾‾‾
@@ -1427,7 +1436,7 @@ class QuatroVias(Vias):
                             2].linha:
                         conector.linha.connect_to(conector2.linha)
 
-        def f():
+        def a():
             """
              .    |
             / \  \ /
@@ -1444,8 +1453,10 @@ class QuatroVias(Vias):
                 self.parent.conectores[3].linha)
             self.parent.conectores[3].linha.connect_to(
                 self.parent.conectores[2].linha)
+                
+            print('to aqui')
 
-        def g():
+        def b():
             """ _
                \/|
                /\
@@ -1462,7 +1473,7 @@ class QuatroVias(Vias):
             self.parent.conectores[1].linha.connect_to(
                 self.parent.conectores[2].linha)
 
-        def h():
+        def n():
             """
              |   |
             ‾‾‾  |
@@ -1475,7 +1486,7 @@ class QuatroVias(Vias):
             self.parent.conectores[2].linha.connect_to(
                 self.parent.conectores[3].linha)
 
-        def i():
+        def o():
             """
              .     |
             / \   ‾‾‾
@@ -1488,7 +1499,7 @@ class QuatroVias(Vias):
             self.parent.conectores[0].linha.connect_to(
                 self.parent.conectores[1].linha)
 
-        def j():
+        def d():
             """
              \   |
               \ ‾‾‾
@@ -1501,7 +1512,7 @@ class QuatroVias(Vias):
             self.parent.conectores[2].linha.connect_to(
                 self.parent.conectores[2].linha)
 
-        def k():
+        def i():
             """
              | ‾/|
             ‾‾‾/
@@ -1514,7 +1525,7 @@ class QuatroVias(Vias):
             self.parent.conectores[0].linha.connect_to(
                 self.parent.conectores[3].linha)
 
-        def l():
+        def j():
             """
              |   |
             ‾‾‾ ‾‾‾
@@ -1527,7 +1538,7 @@ class QuatroVias(Vias):
             self.parent.conectores[2].linha.connect_to(
                 self.parent.conectores[0].linha)
 
-        def m():
+        def k():
             """
              |___|
             ___ ___
@@ -1539,7 +1550,7 @@ class QuatroVias(Vias):
             self.parent.conectores[1].linha.connect_to(
                 self.parent.conectores[3].linha)
 
-        def n():
+        def l():
             """
              |   |
              ‾‾‾‾‾
@@ -1558,7 +1569,7 @@ class QuatroVias(Vias):
             self.parent.conectores[2].linha.connect_to(
                 self.parent.conectores[0].linha)
 
-        def o():
+        def m():
             """
              |    |
              |____|
@@ -1910,6 +1921,9 @@ class RedutorVazao(Componente):
     # fator que multiplica a vazão de entrada. Varia de 0 a 1
     fator = 1
 
+    #sentido da redução de vazão
+    #sentido = 0
+
     def remove_bubble(self):
         """apaga o menu flutuante"""
         if not simulando:
@@ -1921,6 +1935,9 @@ class RedutorVazao(Componente):
         """ciclo de atualização da pressão de saída"""
         if simulando:
             if self.conectores[0].linha is not None and self.conectores[1].linha is not None:
+
+                #if self.sentido == 0:
+                #vazao maxima no sentido oposto
                 self.conectores[1].linha.connect_to(
                     self.conectores[0].linha)
 
@@ -1928,8 +1945,9 @@ class RedutorVazao(Componente):
                 self.conectores[1].linha.vazao = self.conectores[0].linha.vazao * self.fator
                 self.conectores[1].linha.propaga = True
 
-                self.conectores[0].linha.pressao = self.conectores[1].linha.pressao
-                self.conectores[0].linha.vazao = self.conectores[1].linha.vazao
+                #self.conectores[0].linha.pressao = self.conectores[1].linha.pressao
+                #self.conectores[0].linha.vazao = self.conectores[1].linha.vazao
+                
 
 
     def inverter(self, instance):
@@ -1953,7 +1971,7 @@ class RedutorVazao(Componente):
         self.source = 'images/x10640.png'
 
         self.conectores = [
-            Conector('entrada', (20, -1), 'vartical', center=self.pos),
+            Conector('entrada', (20, -1), 'vertical', center=self.pos),
             Conector('saida', (20, 81), 'vertical', center=self.pos)
         ]
 
@@ -2007,7 +2025,8 @@ class Manometro(Componente):
     def ciclo(self, dt):
         if simulando:
             if self.conectores[0].linha is not None:
-                self.etiqueta.text = str(self.conectores[0].linha.vazao)
+                self.etiqueta.text = str(self.conectores[0].linha.pressao)
+                #self.etiqueta2.text = str(self.conectores[0].linha.vazao)
 
     def __init__(self, **kwargs):
 
@@ -2018,12 +2037,16 @@ class Manometro(Componente):
         super(Manometro, self).__init__(**kwargs)
 
         self.etiqueta = Label(text='', color=(0, 0, 0))
+        #self.etiqueta2 = Label(text='', color=(0, 0, 0))
         self.add_widget(self.etiqueta)
+        #self.add_widget(self.etiqueta2)
 
         def update_rect(instance, value):
             """reposiciona o label naa posição do manômetro"""
             self.etiqueta.center = center = (
                 self.center[0], self.pos[1] + self.height + 5)
+            #self.etiqueta2.center = center = (
+            #    self.center[0], self.pos[1] + self.height + 20)
 
         self.bind(pos=update_rect, size=update_rect)
 
