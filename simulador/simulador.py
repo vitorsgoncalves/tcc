@@ -2,11 +2,18 @@
 
 from kivy.config import Config
 
-#para funcionar em computadores com placas de video integradas
+#para funcionar em sistemas windows com placas de video integradas
+#workaround para o bug 3576 do kivy.Remover quando o bug for solucionado
 Config.set('graphics', 'multisamples', '0')
 
-#para desabilitar a simulaçãop de multitouch ao clicar com o botão direito
+#para desabilitar a simulação de multitouch ao clicar com o botão direito
 Config.set('input', 'mouse', 'mouse,disable_multitouch')
+
+#desabilitar sair do programa ao pressionar esc
+Config.set('kivy', 'exit_on_escape', '0')
+
+#otimizar para desktop
+Config.set('kivy', 'desktop', '1')
 
 #importações dos componentes do kivy
 from kivy.app import App
@@ -24,6 +31,7 @@ from componentes import SimplesAcao
 from componentes import DuplaAcao
 from componentes import SimplesAcaoInvertida
 from componentes import RedutorVazao
+from componentes import ReguladorDePressao
 from componentes import Valvula
 from componentes import Fonte
 from componentes import Escape
@@ -32,6 +40,7 @@ from componentes import ValvulaE
 from componentes import UnidadeCondicionadora
 from componentes import Manometro
 from componentes import muda_estado
+from componentes import is_simulando
 
 class Painel(GridLayout):
 
@@ -50,7 +59,8 @@ class Painel(GridLayout):
         {'imagem': 'images/valOU.png', 'comando': ValvulaOu, 'args':None},
         {'imagem': 'images/valEcomp.png', 'comando': ValvulaE, 'args':None},
         {'imagem': 'images/flr.png', 'comando': UnidadeCondicionadora, 'args':None},
-        {'imagem': 'images/manometro.png', 'comando': Manometro, 'args':None}
+        {'imagem': 'images/manometro.png', 'comando': Manometro, 'args':None},
+        {'imagem': 'images/X10500.png', 'comando': ReguladorDePressao, 'args':None}
     ]
 
     def __init__(self, **kwargs):
@@ -58,7 +68,7 @@ class Painel(GridLayout):
 
         def adiciona_componente(instance):
 
-            if not instance.parent.area.simulando:
+            if not is_simulando():
                 if instance.args is not None:
                     novo_componente = instance.comando(instance.args)
                 else:
@@ -118,6 +128,11 @@ class SimuladorApp(App):
     def build(self):
         Window.maximize()
         return Gui()
+
+    #para desabilitar o menu ao apertar f1
+    def open_settings(*args):
+        pass
+
 
 if __name__ == '__main__':
     SimuladorApp().run()

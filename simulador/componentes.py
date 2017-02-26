@@ -20,6 +20,9 @@ from kivy.uix.label import Label
 movendo = None
 simulando = False
 
+def is_simulando():
+    return simulando
+
 def muda_estado():
     global simulando
     simulando = not simulando
@@ -1757,9 +1760,9 @@ class Fonte(Componente):
 
     def remove_bubble(self):
         """remove o menu flutuante"""
-        if not simulando:
-            if self.menu in self.children:
-                self.remove_widget(self.menu)
+        #if not simulando:
+        if self.menu in self.children:
+            self.remove_widget(self.menu)
 
     def ciclo(self, dt):
         """ciclo de pressurização da linha conectada
@@ -1810,12 +1813,12 @@ class Fonte(Componente):
             abre_menu = True
 
         if abre_menu:
-            if not simulando:
-                if self.collide_point(*touch.pos):
-                    if self.menu not in self.children:
-                        self.menu.center = (
-                            self.center[0], self.center[1] + self.height)
-                        self.add_widget(self.menu)
+            #if not simulando:
+            if self.collide_point(*touch.pos):
+                if self.menu not in self.children:
+                    self.menu.center = (
+                        self.center[0], self.center[1] + self.height)
+                    self.add_widget(self.menu)
 
         else:
             if not self.menu.collide_point(*touch.pos):
@@ -1857,10 +1860,10 @@ class UnidadeCondicionadora(Componente):
 
     def remove_bubble(self):
         """apaga o menu flutuante"""
-        if not simulando:
-            self.fator = self.slider.value / 100
-            if self.menu in self.parent.children:
-                self.parent.remove_widget(self.menu)
+        #if not simulando:
+        self.fator = self.slider.value / 100
+        if self.menu in self.parent.children:
+            self.parent.remove_widget(self.menu)
 
     def ciclo(self, dt):
         """ciclo de atualização da pressão de saída"""
@@ -1901,12 +1904,12 @@ class UnidadeCondicionadora(Componente):
             abre_menu = True
 
         if abre_menu:
-            if not simulando:
-                if self.collide_point(*touch.pos):
-                    if self.menu not in self.children:
-                        self.menu.center = (
-                            self.center[0], self.center[1] + self.height)
-                        self.parent.add_widget(self.menu)
+            #if not simulando:
+            if self.collide_point(*touch.pos):
+                if self.menu not in self.parent.children:
+                    self.menu.center = (
+                        self.center[0], self.center[1] + self.height)
+                    self.parent.add_widget(self.menu)
         else:
             if not self.menu.collide_point(*touch.pos):
                 self.remove_bubble()
@@ -1926,10 +1929,10 @@ class RedutorVazao(Componente):
 
     def remove_bubble(self):
         """apaga o menu flutuante"""
-        if not simulando:
-            self.fator = self.slider.value / 100
-            if self.menu in self.parent.children:
-                self.parent.remove_widget(self.menu)
+        #if not simulando:
+        self.fator = self.slider.value / 100
+        if self.menu in self.parent.children:
+            self.parent.remove_widget(self.menu)
 
     def ciclo(self, dt):
         """ciclo de atualização da pressão de saída"""
@@ -1994,8 +1997,6 @@ class RedutorVazao(Componente):
         """exibe o menu flutuance ao clicar com o botão direito
         remove o menu ao clicar do lado de fora
         """
-
-    def on_touch_down(self, touch):
         abre_menu = False
         if 'button' in dir(touch):
             if touch.button == 'right':
@@ -2004,17 +2005,92 @@ class RedutorVazao(Componente):
             abre_menu = True
 
         if abre_menu:
-            if not simulando:
-                if self.collide_point(*touch.pos):
-                    if self.menu not in self.children:
-                        self.menu.center = (
-                            self.center[0], self.center[1] + self.height)
-                        self.parent.add_widget(self.menu)
+            #if not simulando:
+            if self.collide_point(*touch.pos):
+                if self.menu not in self.parent.children:
+                    self.menu.center = (
+                        self.center[0], self.center[1] + self.height)
+                    self.parent.add_widget(self.menu)
         else:
             if not self.menu.collide_point(*touch.pos):
                 self.remove_bubble()
         super(Image, self).on_touch_down(touch)
 
+class ReguladorDePressao(Componente):
+    #trocar texto
+    """Válvula controladora de pressão.
+    Ajusta reduz a pressão de saída.
+    """
+
+    #colocar para aparecer no menu lateral
+    #colocar valos de pressao para aparecer num textbox
+
+    source = 'images/X10500.png'
+
+    # pressao de saida
+    fator = 1
+
+    def remove_bubble(self):
+        """apaga o menu flutuante"""
+        #if not simulando:
+        self.fator = self.slider.value / 100
+        if self.menu in self.parent.children:
+            self.parent.remove_widget(self.menu)
+
+    def ciclo(self, dt):
+        """ciclo de atualização da pressão de saída"""
+        if simulando:
+            #verifica se há linhas conectadas
+            if self.conectores[0].linha is not None:
+                if self.conectores[1].linha is not None:
+                    self.conectores[1].linha.pressao = self.conectores[0].linha.pressao * self.fator
+
+    def __init__(self, **kwargs):
+        #modificar locais de inicio
+        self.conectores = [
+            Conector('entrada', (28, 0), 'horizontal', center=self.pos),
+            Conector('saida', (28, 80), 'horizontal', center=self.pos)
+        ]
+
+        super(ReguladorDePressao, self).__init__(**kwargs)
+
+        # cria o menu de vias flutuante
+        self.menu = Bubble(
+            size=(100, 35),
+            orientation='horizontal',
+            arrow_pos='bottom_mid'
+        )
+        #trocar o slider por um caixa de texto
+        # adiciona um slider para ajustar a pressão de saída
+        self.slider = Slider(min=0, max=100, value=100)
+        self.menu.add_widget(self.slider)
+
+
+    def on_touch_down(self, touch):
+        """exibe o menu flutuance ao clicar com o botão direito
+        remove o menu ao clicar do lado de fora
+        """
+        abre_menu = False
+        if 'button' in dir(touch):
+            if touch.button == 'right':
+                abre_menu = True
+        elif touch.is_double_tap:
+            abre_menu = True
+
+        if abre_menu:
+            #if not simulando:
+            if self.collide_point(*touch.pos):
+                if self.menu not in self.parent.children:
+                    self.menu.center = (
+                        self.center[0], self.center[1] + self.height)
+                    self.parent.add_widget(self.menu)
+        else:
+            if not self.menu.collide_point(*touch.pos):
+                self.remove_bubble()
+
+        super(Image, self).on_touch_down(touch)
+            
+    
 class Manometro(Componente):
     """indicador de pressão nas linhas
     exibe o valor de pressão na liha em que está conectado
@@ -2051,8 +2127,47 @@ class Manometro(Componente):
         self.bind(pos=update_rect, size=update_rect)
 
 
-class CursoRolete(Widget):
+class CursoRolete(Image):
     """marcação de curso do cilindro para acionar o rolete"""
+
+    def remove_bubble(self):
+        """remove o menu flutuante"""
+        if not simulando:
+            if self.menu in self.children:
+                self.remove_widget(self.menu)
+
+
+    def on_enter(instance, value):
+        """altera seu valor de pressão ao pressionar enter"""
+ 
+        instance.etiqueta.text = value.text
+        instance.remove_bubble()
+
+
+    def on_touch_down(self, touch):
+        """exibe o menu ao clicar com o botão direito"""
+        abre_menu = False
+        if 'button' in dir(touch):
+            if touch.button == 'right':
+                abre_menu = True
+        elif touch.is_double_tap:
+            abre_menu = True
+
+        if abre_menu:
+            if not simulando:
+                if self.collide_point(*touch.pos):
+                    if self.menu not in self.children:
+                        self.menu.center = (
+                            self.center[0], self.center[1] + 40)
+                        self.add_widget(self.menu)
+
+        else:
+            if not self.menu.collide_point(*touch.pos):
+                self.remove_bubble()
+
+        super(Image, self).on_touch_down(touch)
+
+
 
     def __init__(self, **kwargs):
 
@@ -2068,6 +2183,18 @@ class CursoRolete(Widget):
                 0, 0, 0), center=(
                 self.center[0], self.pos[1] + 20))
         self.add_widget(self.etiqueta)
+
+        # cria o menu flutuante
+        self.menu = Bubble(
+            size=(100, 35),
+            orientation='horizontal',
+            arrow_pos='bottom_mid'
+        )
+        self.menu.add_widget(Label(text='Pressao:'))
+        self.valor_pressao = TextInput(multiline=False)
+        self.menu.add_widget(self.valor_pressao)
+
+        self.valor_pressao.bind(on_text_validate=self.on_enter)
 
         def update_rect(instance, value):
             """atualiza as posições dos elementos para acompanhar o arrasto com o mouse"""
