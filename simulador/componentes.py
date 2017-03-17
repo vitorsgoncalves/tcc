@@ -922,7 +922,7 @@ class ValvulaLogica(Componente):
                 p1 = self.conectores[0].linha.pressao
             if self.conectores[1].linha is not None:
                 p2 = self.conectores[1].linha.pressao
-            if self.conectores[1].linha is not None:
+            if self.conectores[2].linha is not None:
                 self.equacao(p1, p2)
 
                 self.obturador.center = (
@@ -958,18 +958,20 @@ class ValvulaE(ValvulaLogica):
         """define o comportamento lógico da válvula"""
 
         if p1 == p2:
-
             self.pos_obturador = 0
-            self.conectores[0].linha.connect_to(self.conectores[2].linha)
-            self.conectores[2].linha.connect_to(self.conectores[0].linha)
+            if p2 > 0:
+                self.conectores[0].linha.connect_to(self.conectores[2].linha)
+                self.conectores[2].linha.connect_to(self.conectores[0].linha)
         else:
+            self.conectores[2].linha.pressao = 0
+            self.conectores[2].linha.vazao = 0            
             self.conectores[0].linha.disconnect(self.conectores[2].linha)
             self.conectores[2].linha.disconnect(self.conectores[0].linha)
-            self.conectores[1].linha.disconnect(self.conectores[2].linha)
-            self.conectores[2].linha.disconnect(self.conectores[1].linha)
+            #self.conectores[1].linha.disconnect(self.conectores[2].linha)
+            #self.conectores[2].linha.disconnect(self.conectores[1].linha)
             if p1 > p2:
                 self.pos_obturador = 1
-            else:
+            elif p1 < p2:
                 self.pos_obturador = -1
 
 
@@ -2190,7 +2192,7 @@ class CursoRolete(Image):
             orientation='horizontal',
             arrow_pos='bottom_mid'
         )
-        self.menu.add_widget(Label(text='Pressao:'))
+        self.menu.add_widget(Label(text='Label:'))
         self.valor_pressao = TextInput(multiline=False)
         self.menu.add_widget(self.valor_pressao)
 
