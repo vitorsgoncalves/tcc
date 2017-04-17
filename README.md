@@ -1,12 +1,12 @@
-# Simulador de Circuitos Pneumáticos
+# FreeFluid - Simulador de Circuitos Pneumáticos
 
 
 Simulador de circuitos pneumáticos escrito em python utilizando a biblioteca kivy.
 
 Permite a montagem e simulação interativa em tempo real de circuitos compostos por válvulas e cilindros.
 
-<img src="/screenshots/01.png?raw=true" width="40%" height="40%" />
-<img src="/screenshots/02.png?raw=true" width="40%" height="40%" />
+<img src="/screenshots/01.png?raw=true" width="60%" height="60%" align='center'/>
+
 ___
 
 ### Utilização
