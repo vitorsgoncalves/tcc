@@ -107,18 +107,20 @@ class Gui(BoxLayout):
     def toogle(self):
         muda_estado()
 
-    texto = "Este simulador foi desenvolvido para o meu trabalho de conclusão de curso "\
-            "e está disponível sob licença GPL 3 em: \n"
+    texto = "Este simulador foi desenvolvido para o meu trabalho"\
+            "de conclusão de curso "\
+            "em Engenharia de Controle e Automação e está "\
+            "disponível sob licença GPL 3 em: \n"
     link = "[b]github.com/vitorsgoncalves/tcc[/b]"
 
     content = BoxLayout(orientation='vertical')
     content.add_widget(Label(text=texto, markup=True, text_size=(320,100), halign='justify', valign='middle'))
     content.add_widget(Label(text=link, markup=True, text_size=(320,100), halign='center', valign='middle'))
 
-    popup = Popup(title="Copyright (C) 2016 Vitor da Silva Gonçalves",
+    popup = Popup(title="Copyright© 2017 Vitor da Silva Gonçalves",
                   content=content,
                   size_hint=(None, None),
-                  size=(350, 160),
+                  size=(350, 200),
                   auto_dismiss=True
                   )
 

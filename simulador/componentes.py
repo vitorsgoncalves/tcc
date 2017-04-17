@@ -36,6 +36,10 @@ class Linha(Widget):
     vazao = 0
 
     propaga = BooleanProperty(False)
+    propagou = False
+
+    #workaround para regular a vazao no retorno
+    fator = 1
 
     orientacao1 = 'vertical'
     orientacao2 = 'vertical'
@@ -153,8 +157,9 @@ class Linha(Widget):
     def on_touch_down(self, touch):
         """movimenta a linha ao clicá-la e arrastá-la"""
         if touch.button == 'right':
-            if self.point_over(touch.pos):
-                self.apaga_linha()
+            if not simulando:
+                if self.point_over(touch.pos):
+                    self.apaga_linha()
         else:
             global movendo
 
@@ -205,11 +210,13 @@ class Linha(Widget):
     # def on_pressao(self, instance, value):
     def on_propaga(self, instance, value):
         """tranfere seus dados às linhas seguintes"""
+        #self.propagou = False
         if self.propaga:
             for linha in self.connected_lines:
                 linha.pressao = self.pressao
                 linha.vazao = self.vazao
                 linha.propaga = True
+            self.propagou = True
             self.propaga = False
 
 
@@ -289,18 +296,20 @@ class Conector(ButtonBehavior, Widget):
                 for objeto in componente.children:
                     if isinstance(objeto, Conector):
                         if objeto.collide_point(*self.last_touch.pos):
-                            sobrecon = True
-                            objeto.linha = self.linha
-                            self.linha.p2 = objeto.pos
+                            #para impedir de conectar a si mesmo
+                            if objeto != self:
+                                sobrecon = True
+                                objeto.linha = self.linha
+                                self.linha.p2 = objeto.pos
 
-                            self.linha.orientacao2 = objeto.orientacao
-                            self.linha.atualiza_linha()
+                                self.linha.orientacao2 = objeto.orientacao
+                                self.linha.atualiza_linha()
 
-                            # apaga os quadrados dos conectores
-                            self.tamanho = (0, 0)
-                            self.quadrado.size = self.tamanho
-                            objeto.tamanho = (0, 0)
-                            objeto.quadrado.size = self.tamanho
+                                # apaga os quadrados dos conectores
+                                self.tamanho = (0, 0)
+                                self.quadrado.size = self.tamanho
+                                objeto.tamanho = (0, 0)
+                                objeto.quadrado.size = self.tamanho
 
             elif isinstance(componente, Linha):
                 if componente.point_over(self.last_touch.pos):
@@ -588,7 +597,7 @@ class SimplesAcao(Cilindro):
 
         self.conectores = [
             Conector(
-                'entrada', (10, -2), 'vertical', center=self.pos)]
+                'entrada', (10, 0), 'vertical', center=self.pos)]
 
         super(SimplesAcao, self).__init__(**kwargs)
 
@@ -635,8 +644,8 @@ class DuplaAcao(Cilindro):
 
     def __init__(self, **kwargs):
 
-        self.conectores = [Conector('entrada', (10, -2), 'vertical', center=self.pos),
-                           Conector('entrada', (90, -2), 'vertical', center=self.pos)]
+        self.conectores = [Conector('entrada', (10, 0), 'vertical', center=self.pos),
+                           Conector('entrada', (90, 0), 'vertical', center=self.pos)]
 
         super(DuplaAcao, self).__init__(**kwargs)
 
@@ -644,7 +653,8 @@ class DuplaAcao(Cilindro):
         """equação característica do cilindro"""
         variacao = 0
         if len(pressao) > 0:
-            variacao = (self.conectores[0].linha.pressao * self.conectores[0].linha.vazao) - (self.conectores[1].linha.pressao * self.conectores[1].linha.vazao)
+            #workaround para controlar a vazao na saida
+            variacao = (self.conectores[0].linha.pressao * self.conectores[0].linha.vazao * self.conectores[1].linha.fator) - (self.conectores[1].linha.pressao * self.conectores[1].linha.vazao * self.conectores[0].linha.fator * 0.8)
         return variacao
 
 
@@ -1082,6 +1092,7 @@ class Valvula(ButtonBehavior, Componente):
                     self.pos_val -= varpos  # clarificar esses sinais
                 self.varpos_ant = varpos
 
+
     def __init__(self, qt_vias, **kwargs):
 
         self.qt_vias = qt_vias
@@ -1199,7 +1210,6 @@ class Vias(Image):
         for conector in self.parent.conectores:
             for conector2 in self.parent.conectores:
                 conector.linha.disconnect(conector2.linha)
-                #conector2.linha.vazao = 0
 
     def __init__(self, tipo, vias, **kwargs):
         super(Vias, self).__init__(**kwargs)
@@ -1270,12 +1280,9 @@ class DuasVias(Vias):
                 self.parent.conectores[0].linha)
             self.parent.conectores[0].linha.connect_to(
                 self.parent.conectores[1].linha)
-                
-            print('passa')
 
         def bloqueia():
             self.desconecta_tudo()
-            print('bloqueia')
 
         self.tipo = tipo
         self.vias = [
@@ -1458,8 +1465,6 @@ class QuatroVias(Vias):
                 self.parent.conectores[3].linha)
             self.parent.conectores[3].linha.connect_to(
                 self.parent.conectores[2].linha)
-                
-            print('to aqui')
 
         def b():
             """ _
@@ -1871,8 +1876,13 @@ class UnidadeCondicionadora(Componente):
         """ciclo de atualização da pressão de saída"""
         if simulando:
             if self.conectores[1].linha is not None:
-                self.conectores[1].linha.pressao = self.conectores[
-                    0].linha.pressao * self.fator
+                if self.conectores[0].linha is not None:
+
+                    self.conectores[1].linha.pressao = self.conectores[
+                        0].linha.pressao * self.fator
+                    self.conectores[1].linha.vazao = self.conectores[
+                        0].linha.vazao
+                    self.conectores[1].linha.propaga = True
 
     def __init__(self, **kwargs):
 
@@ -1927,7 +1937,7 @@ class RedutorVazao(Componente):
     fator = 1
 
     #sentido da redução de vazão
-    #sentido = 0
+    sentido = 0
 
     def remove_bubble(self):
         """apaga o menu flutuante"""
@@ -1941,17 +1951,42 @@ class RedutorVazao(Componente):
         if simulando:
             if self.conectores[0].linha is not None and self.conectores[1].linha is not None:
 
-                #if self.sentido == 0:
-                #vazao maxima no sentido oposto
-                self.conectores[1].linha.connect_to(
-                    self.conectores[0].linha)
+                if self.sentido == 0:
 
-                self.conectores[1].linha.pressao = self.conectores[0].linha.pressao
-                self.conectores[1].linha.vazao = self.conectores[0].linha.vazao * self.fator
-                self.conectores[1].linha.propaga = True
+                    if self.conectores[0].linha.propagou == True:
 
-                #self.conectores[0].linha.pressao = self.conectores[1].linha.pressao
-                #self.conectores[0].linha.vazao = self.conectores[1].linha.vazao
+                        self.conectores[1].linha.pressao = self.conectores[0].linha.pressao
+                        self.conectores[1].linha.vazao = self.conectores[0].linha.vazao * self.fator
+                        self.conectores[1].linha.propaga = True
+
+                        self.conectores[0].linha.propagou == False
+                        
+                    elif self.conectores[1].linha.propagou == True:
+                        self.conectores[0].linha.pressao = self.conectores[1].linha.pressao
+                        self.conectores[0].linha.vazao = self.conectores[1].linha.vazao
+                        self.conectores[0].linha.propaga = True
+
+                        self.conectores[1].linha.propagou == False                
+                else:
+                    
+                    if self.conectores[0].linha.propagou == True:
+
+                        self.conectores[1].linha.fator = self.fator
+
+                        self.conectores[1].linha.pressao = self.conectores[0].linha.pressao
+                        self.conectores[1].linha.vazao = self.conectores[0].linha.vazao 
+                        self.conectores[1].linha.propaga = True
+
+                        self.conectores[0].linha.propagou == False
+                        
+                    elif self.conectores[1].linha.propagou == True:
+                        self.conectores[0].linha.fator = self.fator
+                        
+                        self.conectores[0].linha.pressao = self.conectores[1].linha.pressao
+                        self.conectores[0].linha.vazao = self.conectores[1].linha.vazao* self.fator
+                        self.conectores[0].linha.propaga = True
+
+                        self.conectores[1].linha.propagou == False                                      
                 
 
 
@@ -1963,12 +1998,11 @@ class RedutorVazao(Componente):
             self.source = 'images/x10640.png'
 
         # inverte os conectores
-        self.conectores[0].pos_relativa, self.conectores[1].pos_relativa = self.conectores[1].pos_relativa, self.conectores[0].pos_relativa
-
-        # desconecta as linhas
-        for conector in self.conectores:
-            if conector.linha is not None:
-                conector.linha.apaga_linha()        
+        if self.sentido == 0:
+            self.sentido = 1
+        elif self.sentido == 1:
+            self.sentido = 0
+   
 
 
     def __init__(self, **kwargs):
@@ -2019,13 +2053,9 @@ class RedutorVazao(Componente):
         super(Image, self).on_touch_down(touch)
 
 class ReguladorDePressao(Componente):
-    #trocar texto
-    """Válvula controladora de pressão.
-    Ajusta reduz a pressão de saída.
+    """Válvula reguladora de pressão.
+    Ajusta a pressão de saída.
     """
-
-    #colocar para aparecer no menu lateral
-    #colocar valos de pressao para aparecer num textbox
 
     source = 'images/X10500.png'
 
@@ -2103,8 +2133,7 @@ class Manometro(Componente):
     def ciclo(self, dt):
         if simulando:
             if self.conectores[0].linha is not None:
-                self.etiqueta.text = str(self.conectores[0].linha.pressao)
-                #self.etiqueta2.text = str(self.conectores[0].linha.vazao)
+                self.etiqueta.text = str(self.conectores[0].linha.vazao)
 
     def __init__(self, **kwargs):
 
@@ -2115,16 +2144,12 @@ class Manometro(Componente):
         super(Manometro, self).__init__(**kwargs)
 
         self.etiqueta = Label(text='', color=(0, 0, 0))
-        #self.etiqueta2 = Label(text='', color=(0, 0, 0))
         self.add_widget(self.etiqueta)
-        #self.add_widget(self.etiqueta2)
 
         def update_rect(instance, value):
             """reposiciona o label naa posição do manômetro"""
             self.etiqueta.center = center = (
                 self.center[0], self.pos[1] + self.height + 5)
-            #self.etiqueta2.center = center = (
-            #    self.center[0], self.pos[1] + self.height + 20)
 
         self.bind(pos=update_rect, size=update_rect)
 
